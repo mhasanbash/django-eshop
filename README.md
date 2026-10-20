@@ -10,9 +10,14 @@ A modular e-commerce backend featuring product and inventory management, OTP-bas
 
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
 ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
-![DRF](https://img.shields.io/badge/Django_REST_Framework-red?style=for-the-badge&logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/DRF-red?style=for-the-badge&logo=django&logoColor=white)
 ![WebSocket](https://img.shields.io/badge/WebSocket-Real--Time-blueviolet?style=for-the-badge)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Docker_Compose](https://img.shields.io/badge/Docker_Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white)
+![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
+![Uvicorn](https://img.shields.io/badge/Uvicorn-4051B5?style=for-the-badge&logo=gunicorn&logoColor=white)
 
 </div>
 
@@ -76,16 +81,14 @@ The project is designed to provide a structured backend foundation for an online
 | Technology | Purpose |
 |---|---|
 | Python | Backend programming language |
-| Django | Web framework and application architecture |
 | Django REST Framework | REST API development |
 | Django Channels | Asynchronous communication and WebSocket support |
 | WebSockets | Real-time messaging |
 | JWT | Token-based authentication |
 | PostgreSQL | Relational database, when configured |
 | Django Cache Framework | Temporary OTP storage and expiration |
-| Kavenegar | SMS delivery for OTP verification |
+| Meli payamak | SMS delivery for OTP verification |
 | Zarinpal | Online payment gateway |
-| Git | Version control |
 
 > **Note:** The database, cache backend, JWT package, and external service configurations depend on the project's actual settings and installed dependencies.
 
@@ -221,15 +224,80 @@ For production deployments, the following practices are recommended:
 
 - Enable HTTPS and secure WebSocket connections.
 - Configure rate limiting for OTP requests and verification attempts.
-- Never log OTP values, passwords, access tokens, or other sensitive credentials.
 - Validate phone numbers and all incoming request data.
 - Restrict administrative and staff-only operations.
 - Validate WebSocket room access on the server side.
 - Use environment variables for secrets and external service credentials.
 - Verify payment callbacks with the payment provider before confirming an order.
-- Use a production-ready cache and channel-layer backend.
 - Configure Django's production security settings.
 
+## 🐳 Docker & Deployment
+
+The application uses **Docker Compose** to orchestrate its backend infrastructure and simplify deployment. The services run in separate containers and communicate through an internal Docker network.
+
+### Infrastructure
+
+| Service | Image / Technology | Responsibility |
+|---|---|---|
+| `web` | Custom Docker image | Runs the Django application using Uvicorn and ASGI |
+| `db` | PostgreSQL 15 | Stores application data |
+| `redis` | Redis 7 Alpine | Provides an in-memory data store for caching and other configured services |
+| `nginx` | Nginx Alpine | Acts as a reverse proxy and handles HTTP/HTTPS traffic |
+
+### Architecture
+
+```text
+                   Client / Browser
+                          │
+                          ▼
+                    Nginx :80/:443
+                          │
+                          ▼
+                 Django + Uvicorn :8000
+                    ┌─────┴─────┐
+                    ▼           ▼
+                PostgreSQL    Redis
+                   :5432       :6379
+```
+
+### Key Docker Features
+
+- **Containerized services:** Django, PostgreSQL, Redis, and Nginx run in separate containers.
+- **Docker Compose:** Defines and manages the multi-container application.
+- **Persistent database storage:** PostgreSQL data is stored in a mounted volume to preserve data across container recreation.
+- **Environment-based configuration:** Sensitive settings and service credentials are supplied through an environment file.
+- **Health checks:** PostgreSQL readiness and Django application health are checked through configured health-check commands.
+- **Reverse proxy:** Nginx forwards incoming traffic to the backend and serves configured static assets and media files.
+- **ASGI support:** Uvicorn runs the Django ASGI application, enabling support for asynchronous application features.
+- **Automatic restart:** Services use restart policies to improve recovery after container failures.
+
+### Running with Docker Compose
+
+Build and start the services:
+
+```bash
+docker compose up -d --build
+```
+
+View running containers:
+
+```bash
+docker compose ps
+```
+
+View application logs:
+
+```bash
+docker compose logs -f web
+```
+
+Stop the services:
+
+```bash
+docker compose down
+```
+
+> **Note:** The database files are stored in the configured host directory. Running `docker compose down` does not normally delete this bind-mounted data. Back up the database before performing maintenance or deployment changes.
 
 ## 👨‍💻 Developer
 
